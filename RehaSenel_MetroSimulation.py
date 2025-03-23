@@ -44,8 +44,8 @@ class MetroAgi:
         - Ziyaret edilen istasyonları takip edin
         - Her adımda komşu istasyonları keşfedin
         """
-
-
+        
+        # check if the baslangic_id and hedef_id exists in self.istasyonlar 
         if baslangic_id not in self.istasyonlar or hedef_id not in self.istasyonlar:
             return None
         baslangic = self.istasyonlar[baslangic_id]
@@ -55,11 +55,14 @@ class MetroAgi:
 
 
         while queue:
+            # return the first element in to queue
             node, rota = queue.popleft()
 
+            # check if we have arrived at our target
             if node == hedef:
                 return rota
-
+                
+            # check if it's already visited
             if node.idx in ziyaret_edildi:
                 continue
 
@@ -68,8 +71,9 @@ class MetroAgi:
             # node.komsular return a tuple but I only need the komsu here
             for komsu, _ in node.komsular:
                 if komsu.idx not in ziyaret_edildi:
+                    # add the neighbors to the queue only if they are not visited
                     queue.append((komsu, rota + [komsu]))
-
+        
         return None
 
     def en_hizli_rota_bul(self, baslangic_id: str, hedef_id: str) -> Optional[Tuple[List[Istasyon], int]]:
@@ -87,7 +91,8 @@ class MetroAgi:
         - Her adımda toplam süreyi hesaplayın
         - En düşük süreye sahip rotayı seçin
         """
-
+        
+        # check if the baslangic_id and hedef_id exists in self.istasyonlar 
         if baslangic_id not in self.istasyonlar or hedef_id not in self.istasyonlar:
             return None
 
@@ -97,12 +102,13 @@ class MetroAgi:
         pq = [(0, id(baslangic), baslangic, [baslangic])] # [(cost, id, current station, path)]
         heapq.heapify(pq)
 
+        # make the heuristic a function that returns 0.
         heuristic = lambda station: 0
 
         best_f = {baslangic.idx: 0}
 
         while pq:
-            # code below always returns the current station with the lowest cost because of heap ordering the possibilities.
+            # return the current station with the lowest cost.
             current_f, _, current, path = heapq.heappop(pq)
 
             # heuristic returns 0
@@ -112,7 +118,7 @@ class MetroAgi:
             if current.idx in ziyaret_edildi:
                 continue
 
-            # keep the unvisited nodes in ziyaret_edildi
+            # store the unvisited nodes in ziyaret_edildi
             ziyaret_edildi.add(current.idx)
 
             # if the goal is reached return the path and the cost
@@ -122,17 +128,16 @@ class MetroAgi:
             # explore each neighbors
             for komsu, sure in current.komsular:
                 if komsu.idx not in ziyaret_edildi:
+                    # calculate the new cumulative cost
                     new_g = current_f + sure
-                    new_f = new_g + heuristic(komsu) # or just new_f = new_g
+                    new_f = new_g + heuristic(komsu) # or just new_f = new_g since heuristic return 0.
 
-                    # heapq.heappush() allows us to adds the possibility of going
-                    # to each neighbor in terms of their cost.
+                    # push the new route onto the priority queue.
                     heapq.heappush(pq, (new_f, id(komsu), komsu, path + [komsu]))
 
         return None # No path found
 
-        # Specific Scenario
-
+    # Specific Scenario Including aktarma_suresi
     def compute_heuristic(self, current: Istasyon, hedef: Istasyon) -> int:
         """
         heuristic function that returns a penalty when switching metro lines
@@ -140,14 +145,13 @@ class MetroAgi:
         - If the current and target line are on the same metro line return 0 for the time
         - If a transfer is needed return a random time between 3, 10
         """
+        
         aktarma_suresi = random.randint(3,10)
         return 0 if current.hat == hedef.hat else aktarma_suresi
 
     def aktarma_sureli_en_hizli_rota_bul(self, baslangic_id: str, hedef_id: str) -> Optional[Tuple[List[Istasyon], int]]:
-        """
-        """
-
-
+       
+        # check if the baslangic_id and hedef_id exists in self.istasyonlar 
         if baslangic_id not in self.istasyonlar or hedef_id not in self.istasyonlar:
             return None
 
@@ -160,24 +164,33 @@ class MetroAgi:
         best_f = {baslangic.idx: 0}
 
         while pq:
+            # return the current station with the lowest cost.
             current_f, _, current, path = heapq.heappop(pq)
 
+            # retrieve the best known cumulative cost (g) for the current station.
             current_g = best_f[current.idx]
 
+            # continue if already visited
             if current.idx in ziyaret_edildi:
                 continue
-
+                
+            # store the unvisited nodes in ziyaret_edildi
             ziyaret_edildi.add(current.idx)
 
+            # if the goal is reached return the path and the cost
             if current == hedef:
                 return path, current_f
 
+            # explore each neighbors
             for komsu, sure in current.komsular:
                 if komsu.idx not in ziyaret_edildi:
+                    # calculate the new cumulative cost including the penalty for transferring times
                     new_g = current_g + sure
                     heuristic = self.compute_heuristic(current, hedef)
                     new_f = new_g + heuristic # f = g + h
 
+                # if this neighbor hasn't been reached before or a cheaper path is found
+                # update the best cost and push the new route onto the priority queue.
                 if komsu.idx not in best_f:
                     best_f[komsu.idx] = new_f
                     heapq.heappush(pq, (new_f, id(komsu), komsu, path + [komsu]))
