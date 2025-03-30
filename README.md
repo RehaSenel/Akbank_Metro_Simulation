@@ -2,7 +2,7 @@
 
 This project simulates a metro network using a graph-based model where stations are nodes and the connections between them are weighted edged representing travel times. Here we implement two types of search algorithm to find the routes. Breadth-First Search (BFS) is used to determine the route with the minimum number of nodes, and A\* is used to identigy the fastest route based on travel time and a transfer penalty when switching metro lines.
 
-Python is choosen to complete te project. Libraries like `collections`, `heapq` and `random` are used for implementation of queues, priority ques and heuristic functions.
+Python is choosen to complete the project. Libraries like `collections`, `heapq` and `random` are used for implementation of queues, priority ques and heuristic functions.
 
 ## Table of Contents
 
@@ -53,7 +53,7 @@ Each scenario prints:
 
 - The route with the fewest transfers.
 - The fastest route determined by A\* search.
-- The fastest route with random transer penalties applied.
+- The fastest route with random transfer penalties applied.
 
 ## Prequisites
 
